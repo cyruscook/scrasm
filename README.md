@@ -30,6 +30,12 @@ As the primary goal of Scrasm was compatibility with a wide range of runtimes an
 
 ## Tests
 
+Initialize the WebAssembly specification tests before running the suites:
+
+```sh
+git submodule update --init --recursive
+```
+
 Use the commands below to run Scrasm's test suites
 
 ```sh
