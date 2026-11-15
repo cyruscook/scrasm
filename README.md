@@ -47,25 +47,3 @@ Use the commands below to generate JSON schemas for Scrasm's input config and ou
 cargo run --bin schema-gen -- config > scrasm-config.schema.json
 cargo run --bin schema-gen -- output > scrasm-output.schema.json
 ```
-
-## Releases
-
-[Release-plz](https://release-plz.dev/) opens a pull request with version and
-changelog updates when published files change on `main`. Merge that pull request
-to publish to crates.io and create a GitHub release. Publishing uses GitHub's
-OIDC identity; no crates.io token is stored in GitHub secrets.
-
-The repository must allow GitHub Actions to create pull requests. The `crates-io`
-GitHub environment allows deployments only from `main`. The matching trusted
-publisher in [the crate settings](https://crates.io/crates/scrasm/settings) is:
-
-| Setting | Value |
-| --- | --- |
-| Repository owner | `cyruscook` |
-| Repository name | `scrasm` |
-| Workflow filename | `release-plz.yml` |
-| Environment | `crates-io` |
-
-Before merging a release PR, run `cargo test --locked` and
-`cargo publish --dry-run --locked`. Release PRs use the built-in `GITHUB_TOKEN`,
-so their creation does not trigger other GitHub Actions workflows automatically.

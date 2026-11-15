@@ -2,7 +2,7 @@
 name = "scrasm"
 version = "0.1.0"
 edition = "2024"
-description = "A WebAssembly obfuscator that preserves module functionality and runtime compatibility"
+description = "WebAssembly obfuscator"
 repository = "https://github.com/cyruscook/scrasm"
 keywords = ["wasm", "webassembly", "obfuscation"]
 categories = ["wasm"]
