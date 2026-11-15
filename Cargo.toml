@@ -2,11 +2,13 @@
 name = "scrasm"
 version = "0.1.0"
 edition = "2024"
-description = "scrasm"
-repository = "github.com/cyruscook/scrasm.git"
-keywords = ["wasm"]
+description = "A WebAssembly obfuscator that preserves module functionality and runtime compatibility"
+repository = "https://github.com/cyruscook/scrasm"
+keywords = ["wasm", "webassembly", "obfuscation"]
 categories = ["wasm"]
 license = "MIT"
+readme = "README.md"
+include = ["/src/**", "/Cargo.toml", "/Cargo.lock", "/README.md", "/LICENSE", "/CHANGELOG.md"]
 default-run = "scrasm"
 
 [dependencies]
