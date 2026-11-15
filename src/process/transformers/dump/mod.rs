@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -32,6 +34,8 @@ pub struct Dump {
 pub struct DumpReport {
     pub dumped_sections: usize,
     pub diagnostics: Vec<DumpDiagnostic>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub output: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
@@ -75,15 +79,18 @@ impl Transformer for Dump {
         }
 
         let mut count = 0;
-        println!("Dumping module:");
+        let mut output = String::from("Dumping module:\n");
         for s in &mut module.sections {
             count += 1;
             unlazify_with_opt(s, self.config.include_raw)?;
-            println!("{s:#?}");
+            writeln!(output, "{s:#?}")?;
         }
-        println!("Dumped {count} sections.");
+        writeln!(output, "Dumped {count} sections.")?;
+        #[cfg(not(target_arch = "wasm32"))]
+        print!("{output}");
 
         report.dumped_sections = count;
+        report.output = Some(output);
 
         Ok(TransformerOutput {
             module,

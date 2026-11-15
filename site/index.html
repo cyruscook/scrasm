@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f7f5" />
+    <meta
+      name="description"
+      content="Configure Scrasm transformations, obfuscate a WebAssembly module, and inspect the complete output."
+    />
+    <title>Scrasm - WebAssembly obfuscator</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#workbench">Skip to workbench</a>
+    <header class="site-header">
+      <h1><a class="brand" href="./">scrasm</a></h1>
+      <a
+        class="source-link"
+        href="https://github.com/cyruscook/scrasm"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="GitHub repository"
+        title="GitHub repository"
+        ><svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 .75a11.25 11.25 0 0 0-3.56 21.92c.56.1.77-.24.77-.54v-2.1c-3.13.68-3.79-1.33-3.79-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.73 1.16 1.73 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.5-.29-5.13-1.25-5.13-5.56 0-1.23.44-2.23 1.16-3.02-.12-.29-.5-1.43.11-2.98 0 0 .95-.3 3.1 1.15a10.8 10.8 0 0 1 5.63 0c2.15-1.46 3.1-1.15 3.1-1.15.61 1.55.23 2.69.11 2.98.72.79 1.16 1.79 1.16 3.02 0 4.32-2.63 5.27-5.14 5.55.4.35.76 1.03.76 2.08v3.11c0 .3.2.65.77.54A11.25 11.25 0 0 0 12 .75Z"
+          /></svg
+      ></a>
+    </header>
+    <main id="workbench">
+      <div class="engine-feedback">
+        <div id="error" class="error-message" role="alert" hidden></div>
+        <div class="loading-row">
+          <span id="engine-status" role="status" hidden></span
+          ><button id="retry" class="text-button" hidden>Retry loading engine</button>
+        </div>
+      </div>
+      <div class="workspace">
+        <section class="stage" id="stage-module">
+          <h2 class="stage-heading">
+            <button
+              class="stage-trigger"
+              id="trigger-module"
+              type="button"
+              aria-controls="panel-module"
+              aria-expanded="true"
+            >
+              <span class="stage-number">01</span><span class="stage-title">Module</span
+              ><span class="stage-summary" id="summary-module">Choose a .wasm file</span
+              ><svg class="stage-chevron" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="m5 8 5 5 5-5" />
+              </svg>
+            </button>
+          </h2>
+          <div class="stage-panel" id="panel-module" role="region" aria-labelledby="trigger-module">
+            <input
+              id="file-input"
+              aria-label="WebAssembly module"
+              class="visually-hidden"
+              type="file"
+              accept=".wasm,application/wasm"
+              tabindex="-1"
+            />
+            <button id="drop-zone" class="drop-zone" type="button" aria-describedby="file-hint">
+              <svg viewBox="0 0 32 32" class="file-icon" aria-hidden="true">
+                <path d="M9 3h10l6 6v20H7V3h2Zm10 0v7h6M12 16l-3 3 3 3m8-6 3 3-3 3m-3-7-2 9" />
+              </svg>
+              <span id="file-name" class="file-name">Choose a WebAssembly module</span
+              ><span id="file-hint" class="file-hint">or drop a .wasm file here</span>
+              <span id="file-action" class="file-action"
+                >Browse files <span aria-hidden="true">↗</span></span
+              >
+            </button>
+            <div id="file-detail" class="file-detail" hidden>
+              <span id="file-size"></span
+              ><button id="remove-file" class="text-button">Remove</button>
+            </div>
+
+            <div class="module-actions">
+              <button id="example" class="text-button">Use example module</button
+              ><button id="continue-config" class="secondary-button" hidden>
+                Continue to configuration <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
+        </section>
+        <section class="stage" id="stage-config">
+          <h2 class="stage-heading">
+            <button
+              class="stage-trigger"
+              id="trigger-config"
+              type="button"
+              aria-controls="panel-config"
+              aria-expanded="false"
+            >
+              <span class="stage-number">02</span><span class="stage-title">Configuration</span
+              ><span class="stage-summary" id="summary-config">Choose a module first</span
+              ><svg class="stage-chevron" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="m5 8 5 5 5-5" />
+              </svg>
+            </button>
+          </h2>
+          <div
+            class="stage-panel"
+            id="panel-config"
+            role="region"
+            aria-labelledby="trigger-config"
+            hidden
+          >
+            <div class="panel-toolbar">
+              <button id="edit-json" class="text-button" disabled>
+                <span class="mono">{ }</span> Edit JSON
+              </button>
+            </div>
+            <form id="config-form">
+              <fieldset id="config-fields" disabled>
+                <fieldset class="compatibility" aria-describedby="compatibility-hint">
+                  <legend>Runtime compatibility</legend>
+                  <div class="compatibility-options">
+                    <label class="compatibility-choice">
+                      <input type="radio" name="compatibility" value="Legacy" />
+                      <span class="compatibility-content"
+                        ><svg viewBox="0 0 24 24" aria-hidden="true">
+                          <rect x="3" y="4" width="18" height="14" rx="2" />
+                          <path d="M3 8h18M8 21h8M12 18v3M6 6h.01M9 6h.01" /></svg
+                        ><span><strong>Legacy</strong><small>Widest compatibility</small></span
+                        ><span class="choice-check" aria-hidden="true">✓</span></span
+                      >
+                    </label>
+                    <label class="compatibility-choice">
+                      <input type="radio" name="compatibility" value="Modern" />
+                      <span class="compatibility-content"
+                        ><svg viewBox="0 0 24 24" aria-hidden="true">
+                          <rect x="3" y="4" width="18" height="16" rx="3" />
+                          <path d="M3 9h18M6 6.5h.01M9 6.5h.01m-.5 7 2 2 4-4" /></svg
+                        ><span><strong>Modern</strong><small>Recent runtimes</small></span
+                        ><span class="choice-check" aria-hidden="true">✓</span></span
+                      >
+                    </label>
+                    <label class="compatibility-choice">
+                      <input type="radio" name="compatibility" value="None" checked />
+                      <span class="compatibility-content"
+                        ><svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            d="M12 3v4m0 10v4M3 12h4m10 0h4M5.6 5.6l2.8 2.8m7.2 7.2 2.8 2.8M5.6 18.4l2.8-2.8m7.2-7.2 2.8-2.8"
+                          />
+                          <circle cx="12" cy="12" r="3" /></svg
+                        ><span
+                          ><strong>Unrestricted</strong><small>Any standard feature</small></span
+                        ><span class="choice-check" aria-hidden="true">✓</span></span
+                      >
+                    </label>
+                  </div>
+                  <p id="compatibility-hint" class="field-hint">
+                    Use any standardized feature. Existing module features are always preserved.
+                  </p>
+                </fieldset>
+                <div class="transform-heading">
+                  <span>Transformations</span><span id="enabled-count" class="muted"></span>
+                </div>
+                <div id="transform-list"></div>
+                <details class="advanced">
+                  <summary>Advanced options <span aria-hidden="true">+</span></summary>
+                  <div class="advanced-fields">
+                    <label class="checkbox-row"
+                      ><input id="force-visit" type="checkbox" /><span
+                        >Force full module traversal<small
+                          >Decode every part of the module before processing.</small
+                        ></span
+                      ></label
+                    ><label class="checkbox-row"
+                      ><input id="dump-enabled" type="checkbox" /><span
+                        >Include module dumps<small
+                          >Inspect module structure before and after processing.</small
+                        ></span
+                      ></label
+                    ><label class="checkbox-row"
+                      ><input id="dump-raw" type="checkbox" /><span
+                        >Include raw bytes in dumps</span
+                      ></label
+                    >
+                  </div>
+                </details>
+              </fieldset>
+            </form>
+            <div class="config-footer">
+              <button id="reset-config" class="text-button" disabled>Reset defaults</button
+              ><button id="export-config" class="text-button" disabled>
+                Export config <span aria-hidden="true">↓</span>
+              </button>
+            </div>
+
+            <div class="run-area">
+              <kbd id="shortcut">⌘ ↵</kbd
+              ><button id="run" class="primary-button" disabled>
+                <span>Obfuscate module</span><span aria-hidden="true">→</span></button
+              ><button id="cancel" class="secondary-button" hidden>Cancel processing</button>
+            </div>
+          </div>
+        </section>
+        <section class="stage" id="stage-output">
+          <h2 class="stage-heading">
+            <button
+              class="stage-trigger"
+              id="trigger-output"
+              type="button"
+              aria-controls="panel-output"
+              aria-expanded="false"
+            >
+              <span class="stage-number">03</span><span class="stage-title">Output</span
+              ><span class="stage-summary" id="summary-output">No output yet</span
+              ><svg class="stage-chevron" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="m5 8 5 5 5-5" />
+              </svg>
+            </button>
+          </h2>
+          <div
+            class="stage-panel"
+            id="panel-output"
+            role="region"
+            aria-labelledby="trigger-output"
+            hidden
+          >
+            <span id="output-badge" class="badge" hidden>Awaiting module</span>
+            <div id="output-empty" class="output-empty">
+              <h3 id="empty-title">No output yet.</h3>
+              <p id="empty-description">Run Scrasm to generate the obfuscated module and report.</p>
+            </div>
+            <div id="result" hidden>
+              <div class="result-download">
+                <div>
+                  <h3 id="result-name"></h3>
+                </div>
+                <button id="download-wasm" class="primary-button compact">
+                  Download <span aria-hidden="true">↓</span>
+                </button>
+              </div>
+              <dl class="metrics">
+                <div>
+                  <dt>Original</dt>
+                  <dd id="original-size"></dd>
+                </div>
+                <div>
+                  <dt>Obfuscated</dt>
+                  <dd id="output-size"></dd>
+                </div>
+                <div>
+                  <dt>Size change</dt>
+                  <dd id="size-change"></dd>
+                </div>
+                <div>
+                  <dt>Processing</dt>
+                  <dd id="elapsed"></dd>
+                </div>
+              </dl>
+              <div class="report-toolbar">
+                <div class="segmented" aria-label="Output view">
+                  <button id="view-report" aria-pressed="true">Report</button
+                  ><button id="view-json" aria-pressed="false">JSON</button>
+                </div>
+                <button id="download-report" class="text-button">
+                  Download report <span aria-hidden="true">↓</span>
+                </button>
+              </div>
+              <div id="report-view">
+                <p class="report-caption">Each pass reports what changed and what was skipped.</p>
+                <div id="report-list"></div>
+              </div>
+              <div id="json-view" hidden>
+                <div class="code-toolbar">
+                  <span>scrasm-result.json</span
+                  ><button id="copy-report" class="text-button">Copy JSON</button>
+                </div>
+                <pre id="report-json" tabindex="0" aria-label="Full Scrasm JSON output"></pre>
+              </div>
+              <div class="result-footer">
+                <button id="download-output-schema" class="text-button">
+                  Download output schema <span aria-hidden="true">↓</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    <dialog id="config-dialog" aria-labelledby="dialog-title">
+      <form method="dialog" class="dialog-header">
+        <div>
+          <h2 id="dialog-title">Configuration JSON</h2>
+          <p>Import, edit or export the same configuration used by the CLI.</p>
+        </div>
+        <button class="icon-button" aria-label="Close configuration editor">×</button>
+      </form>
+      <div class="dialog-body">
+        <div class="editor-toolbar">
+          <label for="config-json">scrasm-config.json</label
+          ><button id="import-config" class="text-button">
+            Import file <span aria-hidden="true">↑</span></button
+          ><input id="config-file" type="file" accept=".json,application/json" hidden />
+        </div>
+        <textarea
+          id="config-json"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+          aria-describedby="json-hint"
+        ></textarea>
+        <p id="json-hint" class="field-hint">
+          Omitted options use Scrasm defaults. Seeds are null or an array of 32 bytes.
+        </p>
+        <p id="json-error" class="error-message" role="alert" hidden></p>
+      </div>
+      <div class="dialog-footer">
+        <button id="download-schema" class="text-button">
+          Download schema <span aria-hidden="true">↓</span></button
+        ><button id="apply-config" class="primary-button compact">Apply configuration</button>
+      </div>
+    </dialog>
+    <div id="announcement" class="visually-hidden" role="status" aria-live="polite"></div>
+    <noscript>JavaScript is required to use Scrasm.</noscript>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

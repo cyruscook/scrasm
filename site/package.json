@@ -1,0 +1,31 @@
+{
+  "name": "scrasm-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build:wasm": "cargo build --manifest-path ../Cargo.toml --locked --release --target wasm32-unknown-unknown -p scrasm-web && wasm-bindgen ../target/wasm32-unknown-unknown/release/scrasm_web.wasm --target web --out-dir public/wasm --out-name scrasm_web",
+    "build": "vp run build:wasm && vp build",
+    "preview": "vp preview",
+    "check": "vp check",
+    "fmt": "vp fmt",
+    "test": "vp test --run"
+  },
+  "devDependencies": {
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.28.12",
+      "onFail": "download"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "24.22.3",
+      "onFail": "download"
+    }
+  }
+}

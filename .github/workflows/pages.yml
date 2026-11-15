@@ -1,0 +1,64 @@
+name: Browser workbench
+
+on:
+  pull_request:
+    paths: ['site/**', 'crates/scrasm-web/**', 'src/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/pages.yml']
+  push:
+    branches: [main]
+    paths: ['site/**', 'crates/scrasm-web/**', 'src/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: voidzero-dev/setup-vp@cab1ab9eaff52d4857875f4f2c016e36af8f2c76 # v1.22.0
+        with:
+          version: 1.6.0
+          working-directory: site
+          cache: true
+          run-install: |
+            args: ['--frozen-lockfile']
+      - run: cargo install wasm-bindgen-cli --version 0.2.121 --locked
+      - run: cargo test --locked -p scrasm-web
+      - run: vp check --deny-warnings
+        working-directory: site
+      - run: vp run build
+        working-directory: site
+      - run: vp test --run
+        working-directory: site
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: site/dist
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

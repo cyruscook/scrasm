@@ -10,6 +10,10 @@ I started writing this by hand in 2025 with the intention of commercialising it,
 cargo install scrasm --locked --bin scrasm
 ```
 
+## Browser workbench
+
+Scrasm also runs entirely in the browser using a WebAssembly build of the same Rust library. The workbench includes the full configuration, transformation reports, debug dumps, and downloads. See [site/README.md](site/README.md) for local preview, testing, and GitHub Pages deployment instructions.
+
 ## Features
 
 * [Call graph obfuscation](src/process/transformers/call_graph) - this rewrites direct method invocation with dynamic runtime invocation to hinder static analysis callgraph reconstruction
