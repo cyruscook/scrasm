@@ -1,0 +1,60 @@
+[package]
+name = "scrasm"
+version = "0.1.0"
+edition = "2024"
+description = "scrasm"
+repository = "github.com/cyruscook/scrasm.git"
+keywords = ["wasm"]
+categories = ["wasm"]
+license = "MIT"
+default-run = "scrasm"
+
+[dependencies]
+anyhow = "1.0.104"
+clap = { version = "4.6.7", features = ["derive"] }
+rand = "0.9.5"
+schemars = "1.2.2"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+ts-rs = { version = "10.1.0", features = ["serde-compat"] }
+wasmbin = { version = "0.10.0", features = ["threads"] }
+
+[dev-dependencies]
+indexmap = { version = "2.14.2", features = ["rayon"] }
+libtest-mimic = "0.8.2"
+rayon = "1.12.0"
+v8 = "147.4.0"
+wasmi = "0.51.5"
+wasmi_wast = { path = "./vendor-mod/wast" }
+wasmparser = "0.240.0"
+wasmprinter = "0.240.0"
+wast = "240.0.0"
+wast2js = { path = "vendor-mod/wast2js" }
+
+[[bin]]
+name = "schema-gen"
+test = false
+bench = false
+
+[[test]]
+name = "wasmi"
+harness = false
+
+[[test]]
+name = "v8"
+harness = false
+
+[[test]]
+name = "transformers"
+path = "tests/transformers/mod.rs"
+harness = false
+
+[[test]]
+name = "realworld"
+path = "tests/realworld/mod.rs"
+harness = false
+
+[[test]]
+name = "wasocaml"
+path = "tests/wasocaml/mod.rs"
+harness = false
